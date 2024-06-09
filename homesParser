@@ -1,0 +1,95 @@
+// Source code is decompiled from a .class file using FernFlower decompiler.
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Scanner;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+public class homesParser {
+   private Document currentDoc;
+   private String coreURL;
+
+   public homesParser(String base) {
+      this.coreURL = base;
+
+      try {
+         this.currentDoc = Jsoup.connect(this.coreURL).get();
+      } catch (IOException var3) {
+         System.out.println("Could not access link: " + var3.getMessage());
+      }
+
+   }
+
+   public static HashMap<String, IdfDocument> createCityDescrp() {
+      HashMap<String, IdfDocument> cityDescription = new HashMap();
+      cityDescription.put("Philadelphia", new IdfDocument(collectAllNeighborhood("https://www.neighborhoodscout.com/pa/philadelphia")));
+      cityDescription.put("NYC", new IdfDocument(collectAllNeighborhood("https://www.neighborhoodscout.com/ny/new-york")));
+      cityDescription.put("Chicago", new IdfDocument(collectAllNeighborhood("https://www.neighborhoodscout.com/il/chicago")));
+      cityDescription.put("Los Angeles", new IdfDocument(collectAllNeighborhood("https://www.neighborhoodscout.com/ca/los-angeles")));
+      cityDescription.put("Washington DC", new IdfDocument(collectAllNeighborhood("https://www.neighborhoodscout.com/dc/washington")));
+      return cityDescription;
+   }
+
+   public static void compareToCities() {
+      double maxCosine = -1.0;
+      String maxCity = "";
+      System.out.println("Describe your ideal city and we'll match you to one of the five main cities supported in this program");
+      Scanner option = new Scanner(System.in);
+      String wants = option.nextLine();
+      HashMap<String, IdfDocument> cities = createCityDescrp();
+      ArrayList<IdfDocument> documents = new ArrayList();
+      Iterator var7 = cities.entrySet().iterator();
+
+      while(var7.hasNext()) {
+         Map.Entry<String, IdfDocument> city = (Map.Entry)var7.next();
+         documents.add((IdfDocument)city.getValue());
+      }
+
+      IdfDocument query = new IdfDocument(wants);
+      documents.add(query);
+      Corpus corpus = new Corpus(documents);
+      VectorSpaceModel vectorSpace = new VectorSpaceModel(corpus);
+      Iterator var10 = cities.entrySet().iterator();
+
+      while(var10.hasNext()) {
+         Map.Entry<String, IdfDocument> doc = (Map.Entry)var10.next();
+         double similarity = vectorSpace.cosineSimilarity(query, (IdfDocument)doc.getValue());
+         if (similarity > maxCosine) {
+            maxCosine = similarity;
+            maxCity = (String)doc.getKey();
+         }
+      }
+
+      System.out.println("With a cosine similarity of " + maxCosine + " your best city is " + maxCity + "\n");
+   }
+
+   private static String collectAllNeighborhood(String url) {
+      try {
+         Document currentDoc = Jsoup.connect(url).get();
+         StringBuilder combinedText = new StringBuilder();
+         Elements containerSections = currentDoc.select("section.container");
+         Iterator var4 = containerSections.iterator();
+
+         while(var4.hasNext()) {
+            Element section = (Element)var4.next();
+            Elements paragraphs = section.select("p");
+            Iterator var7 = paragraphs.iterator();
+
+            while(var7.hasNext()) {
+               Element paragraph = (Element)var7.next();
+               combinedText.append(paragraph.text()).append(" ");
+            }
+         }
+
+         return combinedText.toString().trim();
+      } catch (Exception var9) {
+         System.out.println("Website couldn't be read");
+         return "";
+      }
+   }
+}

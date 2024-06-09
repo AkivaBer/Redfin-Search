@@ -1,0 +1,59 @@
+// Source code is decompiled from a .class file using FernFlower decompiler.
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeSet;
+
+public class Corpus {
+   private ArrayList<IdfDocument> documents;
+   private HashMap<String, Set<IdfDocument>> invertedIndex;
+
+   public Corpus(ArrayList<IdfDocument> documents) {
+      this.documents = documents;
+      this.invertedIndex = new HashMap();
+      this.createInvertedIndex();
+   }
+
+   private void createInvertedIndex() {
+      Iterator var1 = this.documents.iterator();
+
+      while(var1.hasNext()) {
+         IdfDocument document = (IdfDocument)var1.next();
+         Set<String> terms = document.getTermList();
+         Iterator var4 = terms.iterator();
+
+         while(var4.hasNext()) {
+            String term = (String)var4.next();
+            if (this.invertedIndex.containsKey(term)) {
+               Set<IdfDocument> list = (Set)this.invertedIndex.get(term);
+               list.add(document);
+            } else {
+               Set<IdfDocument> list = new TreeSet();
+               list.add(document);
+               this.invertedIndex.put(term, list);
+            }
+         }
+      }
+
+   }
+
+   public double getInverseDocumentFrequency(String term) {
+      if (this.invertedIndex.containsKey(term)) {
+         double size = (double)this.documents.size();
+         Set<IdfDocument> list = (Set)this.invertedIndex.get(term);
+         double documentFrequency = (double)list.size();
+         return Math.log10(size / documentFrequency);
+      } else {
+         return 0.0;
+      }
+   }
+
+   public ArrayList<IdfDocument> getDocuments() {
+      return this.documents;
+   }
+
+   public HashMap<String, Set<IdfDocument>> getInvertedIndex() {
+      return this.invertedIndex;
+   }
+}

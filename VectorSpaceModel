@@ -1,0 +1,66 @@
+// Source code is decompiled from a .class file using FernFlower decompiler.
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
+
+public class VectorSpaceModel {
+   private Corpus corpus;
+   private HashMap<IdfDocument, HashMap<String, Double>> tfIdfWeights;
+
+   public VectorSpaceModel(Corpus corpus) {
+      this.corpus = corpus;
+      this.tfIdfWeights = new HashMap();
+      this.createTfIdfWeights();
+   }
+
+   private void createTfIdfWeights() {
+      Set<String> terms = this.corpus.getInvertedIndex().keySet();
+      Iterator var2 = this.corpus.getDocuments().iterator();
+
+      while(var2.hasNext()) {
+         IdfDocument document = (IdfDocument)var2.next();
+         HashMap<String, Double> weights = new HashMap();
+         Iterator var5 = terms.iterator();
+
+         while(var5.hasNext()) {
+            String term = (String)var5.next();
+            double tf = document.getTermFrequency(term);
+            double idf = this.corpus.getInverseDocumentFrequency(term);
+            double weight = tf * idf;
+            weights.put(term, weight);
+         }
+
+         this.tfIdfWeights.put(document, weights);
+      }
+
+   }
+
+   private double getMagnitude(IdfDocument document) {
+      double magnitude = 0.0;
+      HashMap<String, Double> weights = (HashMap)this.tfIdfWeights.get(document);
+
+      double weight;
+      for(Iterator var5 = weights.values().iterator(); var5.hasNext(); magnitude += weight * weight) {
+         weight = (Double)var5.next();
+      }
+
+      return Math.sqrt(magnitude);
+   }
+
+   private double getDotProduct(IdfDocument d1, IdfDocument d2) {
+      double product = 0.0;
+      HashMap<String, Double> weights1 = (HashMap)this.tfIdfWeights.get(d1);
+      HashMap<String, Double> weights2 = (HashMap)this.tfIdfWeights.get(d2);
+
+      String term;
+      for(Iterator var7 = weights1.keySet().iterator(); var7.hasNext(); product += (Double)weights1.get(term) * (Double)weights2.get(term)) {
+         term = (String)var7.next();
+      }
+
+      return product;
+   }
+
+   public double cosineSimilarity(IdfDocument d1, IdfDocument d2) {
+      return this.getDotProduct(d1, d2) / (this.getMagnitude(d1) * this.getMagnitude(d2));
+   }
+}

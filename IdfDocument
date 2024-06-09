@@ -1,0 +1,54 @@
+// Source code is decompiled from a .class file using FernFlower decompiler.
+import java.util.HashMap;
+import java.util.Set;
+
+public class IdfDocument implements Comparable<IdfDocument> {
+   private HashMap<String, Integer> termFrequency;
+   private String text;
+
+   public IdfDocument(String text) {
+      this.text = text;
+      this.termFrequency = new HashMap();
+      this.readFileAndPreProcess();
+   }
+
+   private void readFileAndPreProcess() {
+      String[] var1 = this.text.split(" ");
+      int var2 = var1.length;
+
+      for(int var3 = 0; var3 < var2; ++var3) {
+         String word = var1[var3];
+         String filteredWord = word.replaceAll("[^A-Za-z0-9]", "").toLowerCase();
+         if (!filteredWord.equalsIgnoreCase("")) {
+            if (this.termFrequency.containsKey(filteredWord)) {
+               int oldCount = (Integer)this.termFrequency.get(filteredWord);
+               ++oldCount;
+               this.termFrequency.put(filteredWord, oldCount);
+            } else {
+               this.termFrequency.put(filteredWord, 1);
+            }
+         }
+      }
+
+   }
+
+   public double getTermFrequency(String word) {
+      return (double)(Integer)this.termFrequency.getOrDefault(word, 0);
+   }
+
+   public Set<String> getTermList() {
+      return this.termFrequency.keySet();
+   }
+
+   public int compareTo(IdfDocument other) {
+      return 0;
+   }
+
+   private String getFileName() {
+      return "";
+   }
+
+   public String toString() {
+      return this.text;
+   }
+}
